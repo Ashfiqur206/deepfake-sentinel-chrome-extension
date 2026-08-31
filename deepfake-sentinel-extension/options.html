@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>DeepFake Sentinel - Settings</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="options-container">
+    <h1>🛡️ DeepFake Sentinel Settings</h1>
+
+    <div class="settings-section">
+      <h2>General Settings</h2>
+
+      <div class="setting-item">
+        <label for="extension-enabled">Enable Extension</label>
+        <input type="checkbox" id="extension-enabled" checked>
+        <p class="setting-description">Enable or disable the extension globally</p>
+      </div>
+
+      <div class="setting-item">
+        <label for="standalone-mode">Standalone Mode</label>
+        <input type="checkbox" id="standalone-mode" checked>
+        <p class="setting-description">Run analysis client-side (no server needed). Uncheck to use server API.</p>
+      </div>
+
+      <div class="setting-item">
+        <label for="auto-analyze">Auto-Analyze Media</label>
+        <input type="checkbox" id="auto-analyze">
+        <p class="setting-description">Automatically analyze images and audio when hovering</p>
+      </div>
+
+      <div class="setting-item">
+        <label for="show-notifications">Show Notifications</label>
+        <input type="checkbox" id="show-notifications" checked>
+        <p class="setting-description">Display notifications when analysis is complete</p>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h2>API Configuration (Server Mode)</h2>
+
+      <div class="setting-item">
+        <label for="api-url">API Server URL</label>
+        <input type="text" id="api-url" value="http://localhost:8000/api" class="input-text">
+        <p class="setting-description">URL of the DeepFake Sentinel API server (only used in server mode)</p>
+      </div>
+
+      <div class="setting-item">
+        <label for="api-key">API Key (Optional)</label>
+        <input type="password" id="api-key" placeholder="Enter API key if required" class="input-text">
+        <p class="setting-description">API key for authentication (if required by server)</p>
+      </div>
+
+      <button id="test-connection-btn" class="btn btn-primary">Test Connection</button>
+      <span id="connection-status"></span>
+    </div>
+
+    <div class="settings-section">
+      <h2>Analysis Settings</h2>
+
+      <div class="setting-item">
+        <label for="confidence-threshold">Confidence Threshold</label>
+        <input type="range" id="confidence-threshold" min="0" max="100" value="50">
+        <span id="threshold-value">50%</span>
+        <p class="setting-description">Minimum confidence level to show result as FAKE</p>
+      </div>
+
+      <div class="setting-item">
+        <label for="max-file-size">Max File Size (MB)</label>
+        <input type="number" id="max-file-size" value="100" min="10" max="1024" class="input-text">
+        <p class="setting-description">Maximum file size to analyze</p>
+      </div>
+
+      <div class="setting-item">
+        <label for="max-audio-duration">Max Audio Duration (seconds)</label>
+        <input type="number" id="max-audio-duration" value="300" min="10" max="600" class="input-text">
+        <p class="setting-description">Maximum duration for audio files</p>
+      </div>
+
+      <div class="setting-item">
+        <label for="history-limit">History Limit</label>
+        <input type="number" id="history-limit" value="50" min="10" max="500" class="input-text">
+        <p class="setting-description">Maximum number of items to keep in history</p>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h2>Keyboard Shortcuts</h2>
+      <p>Configure keyboard shortcuts in your browser's extension settings.</p>
+      <ul style="margin-top: 10px; color: #555; font-size: 13px;">
+        <li><kbd>Alt+Shift+D</kbd> - Analyze selected media</li>
+        <li><kbd>Alt+Shift+A</kbd> - Analyze all audio on page</li>
+      </ul>
+    </div>
+
+    <div class="settings-section">
+      <h2>Privacy & Data</h2>
+      <div class="setting-item">
+        <label for="collect-analytics">Collect Anonymous Usage Data</label>
+        <input type="checkbox" id="collect-analytics">
+        <p class="setting-description">Help improve DeepFake Sentinel by sending anonymous usage data</p>
+      </div>
+
+      <button id="clear-data-btn" class="btn btn-danger">Clear All Data</button>
+      <span id="clear-status"></span>
+    </div>
+
+    <div class="settings-actions">
+      <button id="save-settings-btn" class="btn btn-primary">💾 Save Settings</button>
+      <button id="reset-settings-btn" class="btn btn-secondary">↻ Reset to Defaults</button>
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

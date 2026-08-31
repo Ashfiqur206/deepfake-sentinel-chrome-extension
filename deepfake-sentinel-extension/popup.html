@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>DeepFake Sentinel</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="popup-container">
+    <div class="popup-header">
+      <h2>🛡️ DeepFake Sentinel</h2>
+      <span id="status-badge" class="badge badge-success">Active</span>
+    </div>
+
+    <div class="popup-content">
+      <div class="quick-actions">
+        <button id="analyze-page-btn" class="btn btn-primary">🔍 Analyze Selected</button>
+        <button id="open-standalone-btn" class="btn btn-audio">📱 Standalone</button>
+      </div>
+
+      <div id="result-container" style="display: none;">
+        <h3>📊 Latest Analysis</h3>
+        <div id="result-display">
+          <div id="verdict-display" class="verdict"></div>
+          <div class="confidence-container">
+            <span class="confidence-label">Confidence:</span>
+            <div class="confidence-bar-wrapper">
+              <div class="confidence-bar">
+                <div id="confidence-fill" class="confidence-fill" style="width: 0%;"></div>
+              </div>
+              <span id="confidence-text" class="confidence-text">0%</span>
+            </div>
+          </div>
+          <p id="explanation-text" class="explanation-text"></p>
+          <div id="details-text" class="details-text"></div>
+        </div>
+      </div>
+
+      <div class="history-section">
+        <div class="history-header">
+          <h3>📝 Recent History</h3>
+          <button id="clear-history-btn" class="btn-small btn-danger">Clear</button>
+        </div>
+        <div id="history-list" class="history-list">
+          <p class="empty-message">No history yet</p>
+        </div>
+      </div>
+
+      <div class="tips-section">
+        <details>
+          <summary>💡 Quick Tips</summary>
+          <ul>
+            <li>Right-click any image/video/audio to analyze</li>
+            <li>Open Standalone for full file upload</li>
+            <li>All analysis runs in your browser</li>
+            <li>No data sent to any server</li>
+          </ul>
+        </details>
+      </div>
+    </div>
+
+    <div class="popup-footer">
+      <a href="#" id="settings-link">⚙️ Settings</a>
+      <span class="version">v1.0.0 (Standalone)</span>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+browser-extension/
+├── manifest.json          # Updated (removed lib references)
+├── background.js
+├── content.js
+├── popup.html
+├── popup.js
+├── options.html
+├── options.js
+├── styles.css
+├── standalone.html
+├── icons/
+│   ├── icon16.png
+│   ├── icon48.png
+│   └── icon128.png
+└── (any other files)
