@@ -1,15 +1,16 @@
 {
   "manifest_version": 3,
-  "name": "DeepFake Sentinel (Standalone)",
-  "version": "1.0.0",
-  "description": "Detect deepfakes in images, videos, and audio - No server needed!",
+  "name": "DeepFake Sentinel",
+  "version": "1.1.0",
+  "description": "Detect deepfakes in images, videos, and audio from any website",
   "permissions": [
     "contextMenus",
     "storage",
     "activeTab",
     "downloads",
     "scripting",
-    "notifications"
+    "notifications",
+    "webRequest"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -34,14 +35,16 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "js": ["media-fetcher.js", "content.js"],
       "css": ["styles.css"],
-      "run_at": "document_end"
+      "run_at": "document_end",
+      "all_frames": true,
+      "match_about_blank": true
     }
   ],
   "options_page": "options.html",
   "web_accessible_resources": [{
-    "resources": ["icons/*", "standalone.html"],
+    "resources": ["icons/*", "standalone.html", "media-fetcher.js"],
     "matches": ["<all_urls>"]
   }],
   "commands": {
@@ -51,6 +54,13 @@
         "mac": "Alt+Shift+D"
       },
       "description": "Analyze selected media"
+    },
+    "scan-page": {
+      "suggested_key": {
+        "default": "Alt+Shift+S",
+        "mac": "Alt+Shift+S"
+      },
+      "description": "Scan page for all media"
     }
   }
 }
