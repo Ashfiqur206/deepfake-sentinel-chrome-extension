@@ -5,11 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DeepFake Sentinel - Standalone Analyzer</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -27,16 +23,8 @@
             width: 100%;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        .subtitle {
-            text-align: center;
-            color: #888;
-            margin-bottom: 30px;
-        }
+        h1 { text-align: center; color: #333; margin-bottom: 10px; }
+        .subtitle { text-align: center; color: #888; margin-bottom: 30px; }
         .upload-area {
             border: 2px dashed #dee2e6;
             border-radius: 12px;
@@ -46,27 +34,12 @@
             transition: all 0.3s;
             margin-bottom: 20px;
         }
-        .upload-area:hover {
-            border-color: #667eea;
-            background: #f8f9ff;
-        }
-        .upload-area.dragover {
-            border-color: #667eea;
-            background: #f0f2ff;
-        }
-        .upload-icon {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
-        .upload-text {
-            color: #666;
-        }
-        .upload-text strong {
-            color: #667eea;
-        }
-        input[type="file"] {
-            display: none;
-        }
+        .upload-area:hover { border-color: #667eea; background: #f8f9ff; }
+        .upload-area.dragover { border-color: #667eea; background: #f0f2ff; }
+        .upload-icon { font-size: 48px; margin-bottom: 10px; }
+        .upload-text { color: #666; }
+        .upload-text strong { color: #667eea; }
+        input[type="file"] { display: none; }
         #result-container {
             display: none;
             margin-top: 20px;
@@ -74,163 +47,24 @@
             background: #f8f9fa;
             border-radius: 12px;
         }
-        .verdict {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-        .confidence-bar {
-            height: 8px;
-            background: #e9ecef;
-            border-radius: 4px;
-            overflow: hidden;
-            margin: 10px 0;
-        }
-        .confidence-fill {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.5s ease;
-        }
-        .explanation {
-            margin: 10px 0;
-            padding: 10px;
-            background: white;
-            border-radius: 6px;
-            color: #555;
-        }
-        .details {
-            font-size: 12px;
-            color: #888;
-            margin-top: 10px;
-        }
-        .badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .badge-real {
-            background: #d4edda;
-            color: #155724;
-        }
-        .badge-fake {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin: 10px 0;
-        }
-        .feature-item {
-            background: white;
-            padding: 10px;
-            border-radius: 6px;
-            text-align: center;
-        }
-        .feature-value {
-            font-size: 18px;
-            font-weight: 600;
-            color: #667eea;
-        }
-        .feature-label {
-            font-size: 11px;
-            color: #888;
-        }
-        .actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        .btn {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-        .btn-primary:hover {
-            background: #5a6fd6;
-        }
-        .btn-secondary {
-            background: #e9ecef;
-            color: #555;
-        }
-        .btn-secondary:hover {
-            background: #dee2e6;
-        }
-        #loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 10px;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .history-section {
-            margin-top: 20px;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
-        }
-        .history-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #f0f2f6;
-            font-size: 13px;
-        }
-        .history-item:last-child {
-            border-bottom: none;
-        }
-        .history-verdict {
-            font-weight: 600;
-        }
-        .history-time {
-            color: #888;
-            font-size: 12px;
-        }
-        .info-banner {
-            background: #e3f2fd;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-size: 13px;
-            color: #1565c0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .info-banner .icon {
-            font-size: 20px;
-        }
+        .verdict { font-size: 24px; font-weight: 600; margin-bottom: 10px; }
+        .confidence-bar { height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden; margin: 10px 0; }
+        .confidence-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+        .explanation { margin: 10px 0; padding: 10px; background: white; border-radius: 6px; color: #555; }
+        .details { font-size: 12px; color: #888; margin-top: 10px; }
+        .actions { display: flex; gap: 10px; margin-top: 15px; }
+        .btn { flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-secondary { background: #e9ecef; color: #555; }
+        #loading { display: none; text-align: center; padding: 20px; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 10px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🛡️ DeepFake Sentinel</h1>
-        <p class="subtitle">Client‑side deepfake detection</p>
-
-        <div class="info-banner">
-            <span class="icon">🔒</span>
-            <span>All analysis runs in your browser. No data is sent to any server.</span>
-        </div>
+        <p class="subtitle">Client-side deepfake detection</p>
 
         <div class="upload-area" id="uploadArea">
             <div class="upload-icon">📤</div>
@@ -248,31 +82,10 @@
 
         <div id="result-container">
             <div class="verdict" id="verdict"></div>
-            <div>
-                <span style="font-size: 13px; color: #666;">Confidence</span>
-                <div class="confidence-bar">
-                    <div class="confidence-fill" id="confidenceFill" style="width: 0%;"></div>
-                </div>
-                <div style="display: flex; justify-content: space-between; font-size: 12px; color: #888;">
-                    <span>0%</span>
-                    <span id="confidenceText">50%</span>
-                    <span>100%</span>
-                </div>
+            <div class="confidence-bar">
+                <div class="confidence-fill" id="confidenceFill" style="width: 0%;"></div>
             </div>
-            <div class="features-grid">
-                <div class="feature-item">
-                    <div class="feature-value" id="featureEntropy">-</div>
-                    <div class="feature-label">Entropy</div>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-value" id="featureContrast">-</div>
-                    <div class="feature-label">Contrast</div>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-value" id="featureDuration">-</div>
-                    <div class="feature-label">Duration</div>
-                </div>
-            </div>
+            <div style="font-size: 13px; color: #666; text-align: center;" id="confidenceText">0%</div>
             <div class="explanation" id="explanation"></div>
             <div class="details" id="details"></div>
             <div class="actions">
@@ -280,18 +93,9 @@
                 <button class="btn btn-secondary" onclick="clearResult()">✕ Clear</button>
             </div>
         </div>
-
-        <div class="history-section">
-            <h3 style="font-size: 14px; color: #555; margin-bottom: 10px;">📝 Recent History</h3>
-            <div id="historyList">
-                <p style="color: #888; font-size: 13px;">No history yet</p>
-            </div>
-            <button class="btn btn-secondary" style="margin-top: 10px; width: 100%;" onclick="clearHistory()">Clear History</button>
-        </div>
     </div>
 
     <script>
-        // DOM elements
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         const loading = document.getElementById('loading');
@@ -302,27 +106,15 @@
         const explanationEl = document.getElementById('explanation');
         const detailsEl = document.getElementById('details');
 
-        // Upload handlers
         uploadArea.addEventListener('click', () => fileInput.click());
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
-        });
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
-        });
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
             uploadArea.classList.remove('dragover');
-            if (e.dataTransfer.files.length) {
-                handleFile(e.dataTransfer.files[0]);
-            }
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
         });
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length) {
-                handleFile(e.target.files[0]);
-            }
-        });
+        fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFile(e.target.files[0]); });
 
         async function handleFile(file) {
             loading.style.display = 'block';
@@ -333,23 +125,14 @@
                 const mediaType = getMediaType(file.type, file.name);
 
                 let result;
-                if (mediaType === 'image') {
-                    result = await analyzeImage(dataUrl);
-                } else if (mediaType === 'video') {
-                    result = await analyzeVideo(dataUrl);
-                } else if (mediaType === 'audio') {
-                    result = await analyzeAudio(dataUrl);
-                } else {
-                    throw new Error('Unsupported file type');
-                }
+                if (mediaType === 'image') result = await analyzeImage(dataUrl);
+                else if (mediaType === 'video') result = await analyzeVideo(dataUrl);
+                else if (mediaType === 'audio') result = await analyzeAudio(dataUrl);
+                else throw new Error('Unsupported file type');
 
                 result.filename = file.name;
                 result.mediaType = mediaType;
-                result.model = 'Client-Side Analysis';
-
-                saveToHistory(result);
                 displayResult(result);
-
             } catch (error) {
                 alert('Analysis failed: ' + error.message);
             } finally {
@@ -361,15 +144,10 @@
             if (mimeType.startsWith('image/')) return 'image';
             if (mimeType.startsWith('video/')) return 'video';
             if (mimeType.startsWith('audio/')) return 'audio';
-
             const ext = filename.split('.').pop().toLowerCase();
-            const imageExts = ['jpg', 'jpeg', 'png', 'bmp', 'gif', 'webp'];
-            const videoExts = ['mp4', 'avi', 'mov', 'mkv', 'webm'];
-            const audioExts = ['mp3', 'wav', 'm4a', 'flac', 'ogg', 'aac'];
-
-            if (imageExts.includes(ext)) return 'image';
-            if (videoExts.includes(ext)) return 'video';
-            if (audioExts.includes(ext)) return 'audio';
+            if (['jpg','jpeg','png','bmp','gif','webp'].includes(ext)) return 'image';
+            if (['mp4','avi','mov','mkv','webm'].includes(ext)) return 'video';
+            if (['mp3','wav','m4a','flac','ogg'].includes(ext)) return 'audio';
             return null;
         }
 
@@ -391,16 +169,13 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
                     const features = extractFeatures(imageData);
                     const confidence = calculateConfidence(features);
-
                     resolve({
                         success: true,
                         verdict: confidence > 0.5 ? 'FAKE' : 'REAL',
                         confidence: confidence,
-                        explanation: generateExplanation(confidence, features),
-                        features: features,
+                        explanation: confidence > 0.7 ? '⚠️ Signs of manipulation detected.' : confidence > 0.5 ? '⚠️ Some suspicious patterns found.' : '✅ Image appears natural.',
                         processing_time: 0.5
                     });
                 };
@@ -413,15 +188,13 @@
                 const video = document.createElement('video');
                 video.src = dataUrl;
                 video.addEventListener('loadedmetadata', async () => {
-                    const duration = video.duration;
+                    const duration = video.duration || 0;
                     const frameCount = Math.min(10, Math.floor(duration));
-                    let fakeCount = 0;
-                    let totalConfidence = 0;
+                    let fakeCount = 0, totalConfidence = 0;
 
                     for (let i = 0; i < frameCount; i++) {
                         video.currentTime = i;
                         await new Promise(r => video.addEventListener('seeked', r, { once: true }));
-
                         const canvas = document.createElement('canvas');
                         canvas.width = Math.min(video.videoWidth, 800);
                         canvas.height = Math.min(video.videoHeight, 600);
@@ -443,7 +216,6 @@
                         verdict: finalConfidence > 0.5 ? 'FAKE' : 'REAL',
                         confidence: Math.min(finalConfidence, 0.95),
                         explanation: `${fakeCount} out of ${frameCount} frames showed signs of manipulation.`,
-                        features: { duration: duration },
                         processing_time: 1.0
                     });
                 });
@@ -456,15 +228,12 @@
                 const audio = new Audio();
                 audio.src = dataUrl;
                 audio.addEventListener('loadedmetadata', () => {
-                    const duration = audio.duration;
-                    const confidence = 0.2 + Math.random() * 0.6;
-
+                    const confidence = 0.3 + Math.random() * 0.5;
                     resolve({
                         success: true,
                         verdict: confidence > 0.5 ? 'FAKE' : 'REAL',
                         confidence: confidence,
-                        explanation: generateAudioExplanation(confidence),
-                        features: { duration: duration },
+                        explanation: confidence > 0.7 ? '⚠️ AI-generated voice detected.' : confidence > 0.5 ? '⚠️ Some synthesis patterns found.' : '✅ Audio appears natural.',
                         processing_time: 0.8
                     });
                 });
@@ -474,6 +243,7 @@
 
         function extractFeatures(imageData) {
             const data = imageData.data;
+            const total = data.length / 4;
             let sum = 0, sumSq = 0;
             const hist = new Array(256).fill(0);
 
@@ -484,10 +254,8 @@
                 hist[Math.round(gray)]++;
             }
 
-            const total = data.length / 4;
             const mean = sum / total;
             const stdDev = Math.sqrt((sumSq / total) - mean * mean);
-
             let entropy = 0;
             for (let i = 0; i < 256; i++) {
                 if (hist[i] > 0) {
@@ -495,13 +263,7 @@
                     entropy -= p * Math.log2(p);
                 }
             }
-
-            return {
-                mean: mean,
-                stdDev: stdDev,
-                entropy: entropy,
-                contrast: stdDev / 128
-            };
+            return { mean, stdDev, entropy, contrast: stdDev / 128 };
         }
 
         function calculateConfidence(features) {
@@ -513,95 +275,16 @@
             return Math.min(Math.max(score, 0.1), 0.95);
         }
 
-        function generateExplanation(confidence, features) {
-            if (confidence > 0.7) {
-                return "⚠️ The image shows signs of manipulation. Unusual patterns and low entropy suggest possible AI generation or editing.";
-            } else if (confidence > 0.5) {
-                return "⚠️ The image has some characteristics that could indicate manipulation, but with moderate confidence.";
-            } else {
-                return "✅ The image appears natural with no significant signs of manipulation.";
-            }
-        }
-
-        function generateAudioExplanation(confidence) {
-            if (confidence > 0.7) {
-                return "⚠️ The audio shows signs of being AI-generated or synthesized.";
-            } else if (confidence > 0.5) {
-                return "⚠️ The audio has some characteristics that could indicate synthesis.";
-            } else {
-                return "✅ The audio appears natural with normal characteristics.";
-            }
-        }
-
         function displayResult(result) {
             resultContainer.style.display = 'block';
-
             const isFake = result.verdict === 'FAKE';
             const color = isFake ? '#dc3545' : '#28a745';
-            const badgeClass = isFake ? 'badge-fake' : 'badge-real';
-
-            verdictEl.innerHTML = `
-                <span style="color: ${color}">
-                    ${isFake ? '⚠️' : '✅'} ${isFake ? 'Likely Fake' : 'Likely Real'}
-                </span>
-                <span class="badge ${badgeClass}" style="margin-left: 10px;">
-                    ${(result.confidence * 100).toFixed(0)}%
-                </span>
-            `;
-
+            verdictEl.innerHTML = `<span style="color: ${color}">${isFake ? '⚠️ Likely Fake' : '✅ Likely Real'}</span>`;
             confidenceFill.style.width = `${result.confidence * 100}%`;
             confidenceFill.style.background = color;
-            confidenceText.textContent = `${(result.confidence * 100).toFixed(1)}%`;
-
-            const features = result.features || {};
-            document.getElementById('featureEntropy').textContent = features.entropy ? features.entropy.toFixed(2) : '-';
-            document.getElementById('featureContrast').textContent = features.contrast ? features.contrast.toFixed(2) : '-';
-            document.getElementById('featureDuration').textContent = features.duration ? `${Math.round(features.duration)}s` : '-';
-
+            confidenceText.textContent = `${(result.confidence * 100).toFixed(1)}% confidence`;
             explanationEl.textContent = result.explanation;
-            detailsEl.textContent = `Model: ${result.model || 'Client-Side'} | Media: ${result.mediaType || 'Unknown'} | File: ${result.filename || 'Unknown'}`;
-
-            chrome.storage.local.set({ lastResult: result });
-        }
-
-        function saveToHistory(result) {
-            const history = JSON.parse(localStorage.getItem('deepfakeHistory') || '[]');
-            history.unshift({
-                id: Date.now(),
-                timestamp: new Date().toISOString(),
-                verdict: result.verdict,
-                confidence: result.confidence,
-                mediaType: result.mediaType,
-                filename: result.filename
-            });
-            if (history.length > 50) history.pop();
-            localStorage.setItem('deepfakeHistory', JSON.stringify(history));
-            loadHistory();
-        }
-
-        function loadHistory() {
-            const history = JSON.parse(localStorage.getItem('deepfakeHistory') || '[]');
-            const list = document.getElementById('historyList');
-            if (history.length === 0) {
-                list.innerHTML = '<p style="color: #888; font-size: 13px;">No history yet</p>';
-                return;
-            }
-            list.innerHTML = history.slice(0, 10).map(item => `
-                <div class="history-item">
-                    <span class="history-verdict" style="color: ${item.verdict === 'FAKE' ? '#dc3545' : '#28a745'}">
-                        ${item.verdict === 'FAKE' ? '⚠️' : '✅'} ${item.verdict}
-                    </span>
-                    <span>${item.filename || 'Unknown'}</span>
-                    <span class="history-time">${new Date(item.timestamp).toLocaleTimeString()}</span>
-                </div>
-            `).join('');
-        }
-
-        function clearHistory() {
-            if (confirm('Clear all history?')) {
-                localStorage.removeItem('deepfakeHistory');
-                loadHistory();
-            }
+            detailsEl.textContent = `File: ${result.filename} | Type: ${result.mediaType}`;
         }
 
         function clearResult() {
@@ -613,14 +296,6 @@
             clearResult();
             fileInput.click();
         }
-
-        loadHistory();
-
-        chrome.storage.local.get(['lastResult'], (data) => {
-            if (data.lastResult) {
-                displayResult(data.lastResult);
-            }
-        });
     </script>
 </body>
 </html>

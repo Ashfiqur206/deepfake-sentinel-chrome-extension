@@ -1,49 +1,55 @@
+const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 
 let extensionEnabled = true;
-let analysisHistory = [];
 
-// Initialize extension
-chrome.runtime.onInstalled.addListener(() => {
+browserAPI.runtime.onInstalled.addListener(() => {
   createContextMenus();
   initializeStorage();
 });
 
 function createContextMenus() {
-  chrome.contextMenus.create({
+  browserAPI.contextMenus.create({
     id: 'deepfake-sentinel',
     title: '🛡️ DeepFake Sentinel',
     contexts: ['image', 'video', 'audio', 'link']
   });
 
-  chrome.contextMenus.create({
+  browserAPI.contextMenus.create({
     id: 'analyze-image',
     parentId: 'deepfake-sentinel',
     title: '🔍 Analyze Image',
     contexts: ['image']
   });
 
-  chrome.contextMenus.create({
+  browserAPI.contextMenus.create({
     id: 'analyze-video',
     parentId: 'deepfake-sentinel',
     title: '🔍 Analyze Video',
     contexts: ['video']
   });
 
-  chrome.contextMenus.create({
+  browserAPI.contextMenus.create({
     id: 'analyze-audio',
     parentId: 'deepfake-sentinel',
     title: '🔍 Analyze Audio',
     contexts: ['audio', 'link']
   });
 
-  chrome.contextMenus.create({
+  browserAPI.contextMenus.create({
+    id: 'scan-page',
+    parentId: 'deepfake-sentinel',
+    title: '📄 Scan Page for All Media',
+    contexts: ['all']
+  });
+
+  browserAPI.contextMenus.create({
     id: 'open-standalone',
     parentId: 'deepfake-sentinel',
     title: '📱 Open Standalone Analyzer',
     contexts: ['all']
   });
 
-  chrome.contextMenus.create({
+  browserAPI.contextMenus.create({
     id: 'settings',
     parentId: 'deepfake-sentinel',
     title: '⚙️ Settings',
@@ -52,41 +58,37 @@ function createContextMenus() {
 }
 
 function initializeStorage() {
-  chrome.storage.sync.get(['enabled', 'historyLimit', 'standaloneMode'], (result) => {
-    chrome.storage.sync.set({
+  browserAPI.storage.sync.get(['enabled', 'historyLimit'], (result) => {
+    browserAPI.storage.sync.set({
       enabled: result.enabled !== undefined ? result.enabled : true,
       historyLimit: result.historyLimit || 50,
-      standaloneMode: result.standaloneMode !== undefined ? result.standaloneMode : true,
-      autoAnalyze: false,
       showNotifications: true,
       useClientSide: true
     });
   });
 }
 
-// Handle context menu clicks
-chrome.contextMenus.onClicked.addListener((info, tab) => {
+browserAPI.contextMenus.onClicked.addListener((info, tab) => {
   if (!extensionEnabled) return;
 
   switch (info.menuItemId) {
     case 'analyze-image':
     case 'analyze-video':
     case 'analyze-audio':
-      // Use client-side analysis
-      chrome.tabs.sendMessage(tab.id, {
+      browserAPI.tabs.sendMessage(tab.id, {
         type: 'ANALYZE_MEDIA',
         url: info.srcUrl,
-        mediaType: getMediaType(info),
-        clientSide: true
+        mediaType: getMediaType(info)
       });
       break;
+    case 'scan-page':
+      browserAPI.tabs.sendMessage(tab.id, { type: 'ANALYZE_ALL' });
+      break;
     case 'open-standalone':
-      chrome.tabs.create({ url: chrome.runtime.getURL('standalone.html') });
+      browserAPI.tabs.create({ url: browserAPI.runtime.getURL('standalone.html') });
       break;
     case 'settings':
-      chrome.runtime.openOptionsPage();
-      break;
-    default:
+      browserAPI.runtime.openOptionsPage();
       break;
   }
 });
@@ -95,22 +97,21 @@ function getMediaType(info) {
   if (info.mediaType === 'image') return 'image';
   if (info.mediaType === 'video') return 'video';
   if (info.mediaType === 'audio') return 'audio';
-
+  
   if (info.linkUrl) {
     const audioExtensions = ['.mp3', '.wav', '.m4a', '.flac', '.ogg', '.aac'];
     if (audioExtensions.some(ext => info.linkUrl.toLowerCase().includes(ext))) {
       return 'audio';
     }
   }
-
+  
   return null;
 }
 
-// Handle messages from content and popup
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.type) {
     case 'GET_HISTORY':
-      chrome.storage.sync.get(['history'], (data) => {
+      browserAPI.storage.sync.get(['history'], (data) => {
         sendResponse({ history: data.history || [] });
       });
       return true;
@@ -121,22 +122,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true;
 
     case 'CLEAR_HISTORY':
-      chrome.storage.sync.set({ history: [] }, () => {
+      browserAPI.storage.sync.set({ history: [] }, () => {
         sendResponse({ success: true });
       });
       return true;
 
     case 'GET_SETTINGS':
-      chrome.storage.sync.get([
-        'enabled', 'standaloneMode', 'autoAnalyze',
-        'showNotifications', 'historyLimit', 'useClientSide'
-      ], (data) => {
+      browserAPI.storage.sync.get(['enabled', 'showNotifications', 'historyLimit'], (data) => {
         sendResponse(data);
       });
       return true;
 
     case 'UPDATE_SETTINGS':
-      chrome.storage.sync.set(message.settings, () => {
+      browserAPI.storage.sync.set(message.settings, () => {
         if (message.settings.enabled !== undefined) {
           extensionEnabled = message.settings.enabled;
         }
@@ -144,19 +142,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       });
       return true;
 
-    case 'SHOW_NOTIFICATION':
-      showNotification(message.message, message.type);
+    case 'SCAN_RESULTS':
+      browserAPI.storage.local.set({ lastScan: message.results });
       sendResponse({ success: true });
-      return true;
-
-    case 'GET_STANDALONE_URL':
-      sendResponse({ url: chrome.runtime.getURL('standalone.html') });
       return true;
   }
 });
 
 function saveToHistory(result) {
-  chrome.storage.sync.get(['history', 'historyLimit'], (data) => {
+  browserAPI.storage.sync.get(['history', 'historyLimit'], (data) => {
     let history = data.history || [];
     const limit = data.historyLimit || 50;
 
@@ -167,40 +161,31 @@ function saveToHistory(result) {
       confidence: result.confidence,
       mediaType: result.mediaType || 'unknown',
       filename: result.filename || 'Unknown',
-      model: 'Client-Side Analysis',
-      standalone: true
+      model: 'Client-Side Analysis'
     };
 
     history.unshift(entry);
-    if (history.length > limit) {
-      history = history.slice(0, limit);
-    }
+    if (history.length > limit) history = history.slice(0, limit);
 
-    chrome.storage.sync.set({ history });
-
-    // Also save to local for quick access
-    chrome.storage.local.set({ lastResult: result });
+    browserAPI.storage.sync.set({ history });
+    browserAPI.storage.local.set({ lastResult: result });
   });
 }
 
-function showNotification(message, type = 'info') {
-  chrome.storage.sync.get(['showNotifications'], (data) => {
-    if (data.showNotifications !== false) {
-      const icon = type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
-      chrome.notifications.create({
-        type: 'basic',
-        iconUrl: 'icons/icon48.png',
-        title: '🛡️ DeepFake Sentinel',
-        message: `${icon} ${message}`,
-        priority: 1
-      });
-    }
-  });
-}
-
-// Update extension state when settings change
-chrome.storage.onChanged.addListener((changes, namespace) => {
+browserAPI.storage.onChanged.addListener((changes, namespace) => {
   if (namespace === 'sync' && changes.enabled) {
     extensionEnabled = changes.enabled.newValue;
   }
+});
+
+browserAPI.commands.onCommand.addListener((command) => {
+  browserAPI.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs[0]) {
+      if (command === 'analyze-selected') {
+        browserAPI.tabs.sendMessage(tabs[0].id, { type: 'ANALYZE_SELECTED' });
+      } else if (command === 'scan-page') {
+        browserAPI.tabs.sendMessage(tabs[0].id, { type: 'ANALYZE_ALL' });
+      }
+    }
+  });
 });
