@@ -22,6 +22,11 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ success: true });
       return true;
 
+    case 'ANALYZE_SCREENSHOT':
+      analyzeScreenshot(message.dataUrl);
+      sendResponse({ success: true });
+      return true;
+
     case 'SHOW_RESULT':
       showResultOverlay(message.result);
       sendResponse({ success: true });
@@ -67,6 +72,32 @@ async function handleScanPage() {
   }
 }
 
+async function analyzeScreenshot(dataUrl) {
+  isAnalyzing = true;
+  showAnalyzingIndicator('image');
+
+  try {
+    const result = await analyzeImage(dataUrl);
+    result.filename = 'screenshot.png';
+    result.mediaType = 'image';
+    result.model = 'Client-Side Analysis';
+    result.fetchMethod = 'screenshot';
+
+    browserAPI.runtime.sendMessage({
+      type: 'SAVE_RESULT',
+      result: result
+    });
+
+    showResultOverlay(result);
+    showInlineNotification('✅ Screenshot analyzed!', 'success');
+  } catch (error) {
+    showInlineNotification(`❌ Error: ${error.message}`, 'error');
+  } finally {
+    isAnalyzing = false;
+    removeAnalyzingIndicator();
+  }
+}
+
 async function analyzeMediaByURL(url, mediaType) {
   if (isAnalyzing) {
     showInlineNotification('Analysis already in progress', 'warning');
@@ -77,7 +108,9 @@ async function analyzeMediaByURL(url, mediaType) {
   showAnalyzingIndicator(mediaType);
 
   try {
-    const { blob, method, warning } = await mediaFetcher.fetchMedia(url);
+    const { blob, method, warning } = await mediaFetcher.fetchMedia(url, {
+      element: window._mediaTarget
+    });
     
     if (!blob) throw new Error('Failed to fetch media');
 
@@ -94,7 +127,7 @@ async function analyzeMediaByURL(url, mediaType) {
       throw new Error('Unsupported media type');
     }
 
-    result.filename = url.split('/').pop() || 'Unknown';
+    result.filename = url.split('/').pop().split('?')[0] || 'Unknown';
     result.mediaType = mediaType;
     result.model = 'Client-Side Analysis';
     result.fetchMethod = method;
@@ -110,7 +143,22 @@ async function analyzeMediaByURL(url, mediaType) {
 
   } catch (error) {
     console.error('Analysis error:', error);
-    showInlineNotification(`❌ Error: ${error.message}`, 'error');
+    
+    // Fallback: capture screenshot
+    try {
+      showInlineNotification('Trying screenshot fallback...', 'info');
+      const response = await new Promise((resolve) => {
+        browserAPI.runtime.sendMessage({ type: 'CAPTURE_SCREENSHOT' }, resolve);
+      });
+      
+      if (response && response.success) {
+        await analyzeScreenshot(response.dataUrl);
+      } else {
+        showInlineNotification(`❌ Error: ${error.message}`, 'error');
+      }
+    } catch (screenshotError) {
+      showInlineNotification(`❌ Error: ${error.message}`, 'error');
+    }
   } finally {
     isAnalyzing = false;
     removeAnalyzingIndicator();
@@ -134,6 +182,8 @@ async function analyzeSpecificMedia(mediaId) {
     return;
   }
 
+  window._mediaTarget = media.element;
+
   if (media.type === 'canvas' && media.element) {
     const blob = await mediaFetcher.canvasToBlob(media.element);
     if (blob) {
@@ -142,19 +192,21 @@ async function analyzeSpecificMedia(mediaId) {
       result.filename = 'canvas-capture.png';
       result.mediaType = 'image';
       result.model = 'Client-Side Analysis';
+      result.fetchMethod = 'canvas';
       showResultOverlay(result);
     }
     return;
   }
 
   if (media.type === 'video' && media.element) {
-    const screenshot = await mediaFetcher.captureVideoScreenshot(media.element);
+    const screenshot = await mediaFetcher.captureVideoFrame(media.element);
     if (screenshot) {
       const dataUrl = await blobToDataURL(screenshot);
       const result = await analyzeImage(dataUrl);
       result.filename = 'video-frame.jpg';
       result.mediaType = 'video-frame';
       result.model = 'Client-Side Analysis';
+      result.fetchMethod = 'video-capture';
       result.explanation = `Analyzed frame from video. ${result.explanation}`;
       showResultOverlay(result);
     }
@@ -182,18 +234,22 @@ async function analyzeSelectedMedia() {
   const canvas = container.closest ? container.closest('canvas') : null;
 
   if (img) {
+    window._mediaTarget = img;
     await analyzeMediaByURL(img.src || img.currentSrc, 'image');
   } else if (video) {
-    const screenshot = await mediaFetcher.captureVideoScreenshot(video);
+    window._mediaTarget = video;
+    const screenshot = await mediaFetcher.captureVideoFrame(video);
     if (screenshot) {
       const dataUrl = await blobToDataURL(screenshot);
       const result = await analyzeImage(dataUrl);
       result.filename = 'video-frame.jpg';
       result.mediaType = 'video';
       result.model = 'Client-Side Analysis';
+      result.fetchMethod = 'video-capture';
       showResultOverlay(result);
     }
   } else if (audio) {
+    window._mediaTarget = audio;
     await analyzeMediaByURL(audio.src || audio.currentSrc, 'audio');
   } else if (canvas) {
     const blob = await mediaFetcher.canvasToBlob(canvas);
@@ -217,7 +273,7 @@ async function analyzeAllMedia() {
   const summary = mediaFetcher.getSummary();
 
   if (summary.total === 0) {
-    showInlineNotification('No media found on this page', 'warning');
+    showInlineNotification('No media found. Try screenshot mode.', 'warning');
     return;
   }
 
@@ -268,8 +324,8 @@ function showMediaPicker(results, summary) {
       <div id="media-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px;"></div>
     </div>
     <div style="padding: 12px 20px; border-top: 1px solid #eee; display: flex; gap: 8px;">
-      <button id="analyze-all-btn" style="flex: 1; padding: 10px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
-        Analyze All (${allMedia.length})
+      <button id="screenshot-btn" style="flex: 1; padding: 10px; background: #6c5ce7; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
+        📸 Capture Visible Area
       </button>
       <button id="close-picker-2" style="padding: 10px 20px; background: #e9ecef; color: #555; border: none; border-radius: 8px; cursor: pointer;">
         Cancel
@@ -296,7 +352,7 @@ function showMediaPicker(results, summary) {
     let preview = '';
     const typeIcon = media.type === 'image' ? '🖼️' : media.type === 'video' ? '🎬' : media.type === 'audio' ? '🎵' : '📦';
 
-    if (media.type === 'image' && media.url) {
+    if (media.type === 'image' && media.url && !media.url.startsWith('blob:')) {
       preview = `<img src="${media.url}" style="width: 100%; height: 100px; object-fit: cover;" onerror="this.style.display='none'">`;
     } else {
       preview = `<div style="height: 100px; display: flex; align-items: center; justify-content: center; font-size: 32px; background: #f8f9fa;">${typeIcon}</div>`;
@@ -323,14 +379,13 @@ function showMediaPicker(results, summary) {
   picker.querySelector('#close-picker').onclick = removeMediaPicker;
   picker.querySelector('#close-picker-2').onclick = removeMediaPicker;
   
-  picker.querySelector('#analyze-all-btn').onclick = async () => {
+  picker.querySelector('#screenshot-btn').onclick = () => {
     removeMediaPicker();
-    showInlineNotification(`Analyzing ${allMedia.length} media items...`, 'info');
-    
-    for (let i = 0; i < Math.min(allMedia.length, 10); i++) {
-      await analyzeSpecificMedia(allMedia[i].id);
-      await new Promise(r => setTimeout(r, 500));
-    }
+    browserAPI.runtime.sendMessage({ type: 'CAPTURE_SCREENSHOT' }, (response) => {
+      if (response && response.success) {
+        analyzeScreenshot(response.dataUrl);
+      }
+    });
   };
 }
 
@@ -431,7 +486,7 @@ async function analyzeAudio(dataUrl, blob) {
           ? "⚠️ The audio shows signs of being AI-generated or synthesized."
           : confidence > 0.5
           ? "⚠️ The audio has some characteristics that could indicate synthesis."
-          : "✅ The audio appears natural with normal human speech characteristics.",
+          : "✅ The audio appears natural.",
         waveform_info: {
           duration: duration,
           sample_rate: 44100,
@@ -468,12 +523,7 @@ function extractImageFeatures(imageData) {
     }
   }
 
-  return {
-    mean: mean,
-    stdDev: stdDev,
-    entropy: entropy,
-    contrast: stdDev / 128
-  };
+  return { mean, stdDev, entropy, contrast: stdDev / 128 };
 }
 
 function calculateConfidence(features) {
@@ -539,9 +589,7 @@ function showAnalyzingIndicator(mediaType = 'image') {
     const style = document.createElement('style');
     style.id = 'ds-animation-style';
     style.textContent = `
-      @keyframes ds-spin {
-        to { transform: rotate(360deg); }
-      }
+      @keyframes ds-spin { to { transform: rotate(360deg); } }
       @keyframes ds-slideIn {
         from { transform: translateX(100px); opacity: 0; }
         to { transform: translateX(0); opacity: 1; }
@@ -614,10 +662,14 @@ function showResultOverlay(result) {
       <div style="font-size: 13px; color: #555; background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 8px; line-height: 1.5;">
         ${result.explanation || 'No explanation available'}
       </div>
-      ${result.waveform_info ? `
-        <div style="display: flex; gap: 16px; font-size: 12px; color: #888; margin: 8px 0; padding: 4px 8px; background: #f8f9fa; border-radius: 4px;">
-          <span>⏱️ ${result.waveform_info.duration || 0}s</span>
-          <span>📊 ${result.waveform_info.sample_rate || 0} Hz</span>
+      ${result.warning ? `
+        <div style="font-size: 12px; color: #856404; background: #fff3cd; padding: 6px 10px; border-radius: 6px; margin-bottom: 8px;">
+          ⚠️ ${result.warning}
+        </div>
+      ` : ''}
+      ${result.fetchMethod ? `
+        <div style="font-size: 11px; color: #888; margin: 4px 0;">
+          Fetch method: ${result.fetchMethod}
         </div>
       ` : ''}
       <div style="display: flex; gap: 16px; font-size: 12px; color: #888; margin: 8px 0;">
@@ -625,27 +677,14 @@ function showResultOverlay(result) {
         <span>Time: ${(result.processing_time || 0).toFixed(2)}s</span>
       </div>
       <div style="display: flex; gap: 8px; margin-top: 12px;">
-        <button id="ds-details" style="flex: 1; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;">View Details</button>
         <button id="ds-dismiss" style="flex: 1; padding: 8px 16px; background: #e9ecef; color: #555; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;">Dismiss</button>
       </div>
     </div>
   `;
 
   document.body.appendChild(overlay);
-
   overlay.querySelector('#ds-close').onclick = removeOverlay;
   overlay.querySelector('#ds-dismiss').onclick = removeOverlay;
-  overlay.querySelector('#ds-details').onclick = () => {
-    const r = result;
-    let details = `Verdict: ${r.verdict}\n`;
-    details += `Confidence: ${(r.confidence * 100).toFixed(1)}%\n`;
-    details += `Model: ${r.model || 'Client-Side'}\n`;
-    details += `Media Type: ${r.mediaType || 'Unknown'}\n`;
-    details += `Processing Time: ${(r.processing_time || 0).toFixed(2)}s\n`;
-    if (r.filename) details += `File: ${r.filename}\n`;
-    details += `\nExplanation:\n${r.explanation || 'No explanation available'}`;
-    alert(details);
-  };
 
   resultOverlay = overlay;
 }
@@ -691,6 +730,4 @@ function showInlineNotification(message, type = 'info') {
   }, 3000);
 }
 
-detectedMedia = mediaFetcher.scanAllMedia().then(r => detectedMedia = r);
-
-console.log('🛡️ DeepFake Sentinel content script loaded!');
+console.log('🛡️ DeepFake Sentinel loaded with multi-strategy media fetching!');

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "DeepFake Sentinel",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Detect deepfakes in images, videos, and audio from any website",
   "permissions": [
     "contextMenus",
@@ -10,7 +10,9 @@
     "downloads",
     "scripting",
     "notifications",
-    "webRequest"
+    "webRequest",
+    "tabs",
+    "offscreen"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -44,7 +46,7 @@
   ],
   "options_page": "options.html",
   "web_accessible_resources": [{
-    "resources": ["icons/*", "standalone.html", "media-fetcher.js"],
+    "resources": ["icons/*", "standalone.html"],
     "matches": ["<all_urls>"]
   }],
   "commands": {

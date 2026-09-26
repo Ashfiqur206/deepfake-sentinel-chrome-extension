@@ -36,6 +36,13 @@ function createContextMenus() {
   });
 
   browserAPI.contextMenus.create({
+    id: 'capture-visible',
+    parentId: 'deepfake-sentinel',
+    title: '📸 Capture & Analyze Visible Media',
+    contexts: ['all']
+  });
+
+  browserAPI.contextMenus.create({
     id: 'scan-page',
     parentId: 'deepfake-sentinel',
     title: '📄 Scan Page for All Media',
@@ -63,7 +70,9 @@ function initializeStorage() {
       enabled: result.enabled !== undefined ? result.enabled : true,
       historyLimit: result.historyLimit || 50,
       showNotifications: true,
-      useClientSide: true
+      useClientSide: true,
+      useBackgroundFetch: true,
+      useScreenshot: true
     });
   });
 }
@@ -81,6 +90,9 @@ browserAPI.contextMenus.onClicked.addListener((info, tab) => {
         mediaType: getMediaType(info)
       });
       break;
+    case 'capture-visible':
+      captureAndAnalyzeVisible(tab.id);
+      break;
     case 'scan-page':
       browserAPI.tabs.sendMessage(tab.id, { type: 'ANALYZE_ALL' });
       break;
@@ -92,6 +104,27 @@ browserAPI.contextMenus.onClicked.addListener((info, tab) => {
       break;
   }
 });
+
+async function captureAndAnalyzeVisible(tabId) {
+  try {
+    const dataUrl = await browserAPI.tabs.captureVisibleTab(null, {
+      format: 'png',
+      quality: 95
+    });
+
+    if (!dataUrl) {
+      console.error('Screenshot failed');
+      return;
+    }
+
+    browserAPI.tabs.sendMessage(tabId, {
+      type: 'ANALYZE_SCREENSHOT',
+      dataUrl: dataUrl
+    });
+  } catch (error) {
+    console.error('Capture error:', error);
+  }
+}
 
 function getMediaType(info) {
   if (info.mediaType === 'image') return 'image';
@@ -110,6 +143,23 @@ function getMediaType(info) {
 
 browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.type) {
+    case 'FETCH_MEDIA':
+      fetchMediaInBackground(message.url, message.messageId);
+      return true;
+
+    case 'CAPTURE_SCREENSHOT':
+      browserAPI.tabs.captureVisibleTab(null, {
+        format: 'png',
+        quality: 90
+      }, (dataUrl) => {
+        if (dataUrl) {
+          sendResponse({ success: true, dataUrl });
+        } else {
+          sendResponse({ success: false, error: 'Screenshot failed' });
+        }
+      });
+      return true;
+
     case 'GET_HISTORY':
       browserAPI.storage.sync.get(['history'], (data) => {
         sendResponse({ history: data.history || [] });
@@ -149,6 +199,48 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
+async function fetchMediaInBackground(url, messageId) {
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': '*/*',
+        'User-Agent': navigator.userAgent
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    const dataUrl = await blobToDataURL(blob);
+
+    browserAPI.runtime.sendMessage({
+      type: 'FETCH_MEDIA_RESULT',
+      messageId: messageId,
+      success: true,
+      dataUrl: dataUrl
+    });
+  } catch (error) {
+    console.error('Background fetch error:', error);
+    browserAPI.runtime.sendMessage({
+      type: 'FETCH_MEDIA_RESULT',
+      messageId: messageId,
+      success: false,
+      error: error.message
+    });
+  }
+}
+
+function blobToDataURL(blob) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.readAsDataURL(blob);
+  });
+}
+
 function saveToHistory(result) {
   browserAPI.storage.sync.get(['history', 'historyLimit'], (data) => {
     let history = data.history || [];
@@ -161,7 +253,8 @@ function saveToHistory(result) {
       confidence: result.confidence,
       mediaType: result.mediaType || 'unknown',
       filename: result.filename || 'Unknown',
-      model: 'Client-Side Analysis'
+      model: 'Client-Side Analysis',
+      fetchMethod: result.fetchMethod || 'unknown'
     };
 
     history.unshift(entry);
